@@ -1,8 +1,8 @@
 "use client";
 
 import { Header } from "@/app/components/Header";
-import { useAppKit, useDisconnect } from "@reown/appkit/react";
-import { useRef, useState, useEffect } from "react";
+import {  useDisconnect } from "@reown/appkit/react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Timer, AlertCircle } from "lucide-react";
 import { useAccount } from "wagmi";
 
@@ -15,6 +15,28 @@ export default function Home() {
   const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const { disconnect } = useDisconnect();
   const { isConnected } = useAccount();
+
+  const startCountdown = useCallback((initialTime: number) => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    const endTime = Date.now() + initialTime;
+
+    intervalRef.current = setInterval(() => {
+      const remaining = endTime - Date.now();
+
+      if (remaining <= 0) {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+        }
+        handleSessionEnd();
+        return;
+      }
+
+      setTimeRemaining(remaining);
+    }, 1000);
+  }, []);
 
   // Check existing session on mount
   useEffect(() => {
@@ -42,29 +64,7 @@ export default function Home() {
         clearInterval(intervalRef.current);
       }
     };
-  }, []);
-
-  const startCountdown = (initialTime: number) => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-
-    const endTime = Date.now() + initialTime;
-
-    intervalRef.current = setInterval(() => {
-      const remaining = endTime - Date.now();
-
-      if (remaining <= 0) {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-        }
-        handleSessionEnd();
-        return;
-      }
-
-      setTimeRemaining(remaining);
-    }, 1000);
-  };
+  }, [startCountdown]);
 
   const handleSetTimer = async () => {
     if (!isConnected) {
@@ -102,9 +102,9 @@ export default function Home() {
       setTimeRemaining(data.remainingTime);
       setIsTimerSet(true);
       startCountdown(data.remainingTime);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Timer setup failed:", error);
-      setSessionError(error.message || "Failed to start timer");
+      setSessionError(error instanceof Error ? error.message : "Failed to start timer");
     } finally {
       setIsLoading(false);
     }
@@ -132,9 +132,9 @@ export default function Home() {
       disconnect();
       setIsTimerSet(false);
       setTimeRemaining(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Session end failed:", error);
-      setSessionError(error.message || "Failed to end session");
+      setSessionError(error instanceof Error ? error.message : "Failed to end session");
     } finally {
       setIsLoading(false);
     }

@@ -4,9 +4,19 @@ declare module "expi-session" {
     checkPeriod?: number;
   }
 
+  interface SessionData {
+    active: boolean;
+    remainingTime: number;
+    [key: string]: unknown;
+  }
+
   interface ExpiStore {
-    set(key: string, value: any, options?: { ttl?: number }): Promise<void>;
-    get(key: string): Promise<any>;
+    set(
+      key: string,
+      value: SessionData,
+      options?: { ttl?: number }
+    ): Promise<void>;
+    get(key: string): Promise<SessionData | null>;
     del(key: string): Promise<void>;
   }
 

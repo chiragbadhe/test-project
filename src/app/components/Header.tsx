@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { Github, Wallet, LogOut } from "lucide-react";
 import { useAppKit } from "@reown/appkit/react";
 import { useAccount } from "wagmi";
@@ -10,7 +9,7 @@ import { useDisconnect } from "@reown/appkit/react";
 export function Header() {
   const { disconnect } = useDisconnect();
 
-  const { open, close } = useAppKit();
+  const { open } = useAppKit();
   const { address, isConnected } = useAccount();
 
   return (
